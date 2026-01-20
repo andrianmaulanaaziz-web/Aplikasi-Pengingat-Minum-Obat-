@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Pengingat Obat Lansia</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>💊 Pengingat Obat Lansia</h1>
+
+    <div class="container">
+        <label>Nama Obat</label>
+        <input type="text" id="namaObat" placeholder="Masukkan nama obat">
+
+        <label>Waktu Minum Obat</label>
+        <input type="time" id="waktuObat">
+
+        <button onclick="tambahPengingat()">Tambah Pengingat</button>
+    </div>
+
+    <h2>📋 Jadwal Obat</h2>
+    <ul id="daftarObat"></ul>
+
+    <h2>📊 Status Pemantauan Keluarga</h2>
+    <p id="status">Belum ada obat yang diminum</p>
+
+    <script src="script.js"></script>
+</body>
+</html>
