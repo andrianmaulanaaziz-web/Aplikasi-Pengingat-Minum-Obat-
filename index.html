@@ -1,30 +1,26 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Pengingat Obat Lansia</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Pengingat Minum Obat</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>💊 Pengingat Obat Lansia</h1>
+  <div class="container">
+    <h1>💊 Pengingat Minum Obat</h1>
 
-    <div class="container">
-        <label>Nama Obat</label>
-        <input type="text" id="namaObat" placeholder="Masukkan nama obat">
+    <label>Nama Obat:</label>
+    <input type="text" id="namaObat" placeholder="Contoh: Paracetamol">
 
-        <label>Waktu Minum Obat</label>
-        <input type="time" id="waktuObat">
+    <label>Waktu Minum Obat:</label>
+    <input type="time" id="waktuObat">
 
-        <button onclick="tambahPengingat()">Tambah Pengingat</button>
-    </div>
+    <button onclick="setPengingat()">Set Pengingat</button>
 
-    <h2>📋 Jadwal Obat</h2>
-    <ul id="daftarObat"></ul>
+    <p id="status"></p>
+  </div>
 
-    <h2>📊 Status Pemantauan Keluarga</h2>
-    <p id="status">Belum ada obat yang diminum</p>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
