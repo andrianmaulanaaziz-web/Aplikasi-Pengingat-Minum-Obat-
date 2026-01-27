@@ -1,52 +1,38 @@
-function tambahPengingat() {
-    let namaObat = document.getElementById("namaObat").value;
-    let waktuObat = document.getElementById("waktuObat").value;
+function setPengingat() {
+  const namaObat = document.getElementById("namaObat").value;
+  const waktuObat = document.getElementById("waktuObat").value;
+  const status = document.getElementById("status");
 
-    if (namaObat === "" || waktuObat === "") {
-        alert("Harap isi nama obat dan waktu minum!");
-        return;
+  if (namaObat === "" || waktuObat === "") {
+    alert("Harap isi nama obat dan waktu minum!");
+    return;
+  }
+
+  status.innerHTML = "⏳ Pengingat aktif untuk obat: " + namaObat;
+
+  const interval = setInterval(() => {
+    const sekarang = new Date();
+    const jam = sekarang.getHours();
+    const menit = sekarang.getMinutes();
+
+    const [jamObat, menitObat] = waktuObat.split(":").map(Number);
+
+    // Jika tepat waktu minum
+    if (jam === jamObat && menit === menitObat) {
+      alert("⏰ Waktunya minum obat: " + namaObat);
+      status.innerHTML = "✅ Sudah waktunya minum obat!";
+      clearInterval(interval);
     }
 
-    let daftar = document.getElementById("daftarObat");
-    let item = document.createElement("li");
-
-    item.innerHTML = `
-        <strong>${namaObat}</strong><br>
-        Waktu: ${waktuObat}
-        <br><br>
-        <button onclick="obatDiminum(this)">Sudah Diminum</button>
-    `;
-
-    daftar.appendChild(item);
-
-    document.getElementById("namaObat").value = "";
-    document.getElementById("waktuObat").value = "";
-
-    setPengingat(namaObat, waktuObat);
-}
-
-function setPengingat(nama, waktu) {
-    let sekarang = new Date();
-    let target = new Date();
-
-    let jam = waktu.split(":")[0];
-    let menit = waktu.split(":")[1];
-
-    target.setHours(jam, menit, 0);
-
-    let selisih = target - sekarang;
-
-    if (selisih > 0) {
-        setTimeout(() => {
-            alert("⏰ Waktu minum obat: " + nama);
-            document.getElementById("status").innerText =
-                "⚠️ Obat " + nama + " belum diminum!";
-        }, selisih);
+    // Jika sudah melewati waktu minum
+    if (
+      jam > jamObat || 
+      (jam === jamObat && menit > menitObat)
+    ) {
+      alert("⚠️ Kamu TERLAMBAT minum obat: " + namaObat);
+      status.innerHTML = "⚠️ Melewati batas waktu minum obat!";
+      clearInterval(interval);
     }
-}
 
-function obatDiminum(button) {
-    button.parentElement.style.backgroundColor = "#d4edda";
-    document.getElementById("status").innerText =
-        "✅ Obat sudah diminum dan terpantau oleh keluarga";
+  }, 1000);
 }
