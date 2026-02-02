@@ -1,25 +1,89 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pengingat Minum Obat</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1>💊 Pengingat Minum Obat</h1>
+        <p class="subtitle">Atur jadwal obat & dapatkan alarm tepat waktu.</p>
+      </div>
+      <div class="clockBox">
+        <p class="clockLabel">Waktu Sekarang</p>
+        <h2 id="clock">00:00:00</h2>
+      </div>
+    </header>
 
-  <div class="container">
-    <h1>💊 Pengingat Minum Obat</h1>
+    <main class="grid">
+      <!-- Form input -->
+      <section class="card formCard">
+        <h3>Tambah Jadwal Obat</h3>
 
-    <label>Nama Obat:</label>
-    <input type="text" id="namaObat" placeholder="Contoh: Paracetamol">
+        <div class="form">
+          <div class="field">
+            <label>Nama Obat</label>
+            <input id="medicineName" type="text" placeholder="Contoh: Paracetamol" />
+          </div>
 
-    <label>Waktu Minum Obat:</label>
-    <input type="time" id="waktuObat">
+          <div class="field">
+            <label>Dosis</label>
+            <input id="dose" type="text" placeholder="Contoh: 1 tablet" />
+          </div>
 
-    <button onclick="setPengingat()">Set Pengingat</button>
+          <div class="field">
+            <label>Waktu Minum</label>
+            <input id="time" type="time" />
+          </div>
 
-    <p id="status"></p>
+          <div class="field">
+            <label>Catatan (opsional)</label>
+            <input id="note" type="text" placeholder="Sesudah makan / sebelum tidur" />
+          </div>
+
+          <button id="addBtn" class="btn primary">➕ Tambah Jadwal</button>
+          <button id="clearBtn" class="btn danger">🗑 Hapus Semua Jadwal</button>
+        </div>
+      </section>
+
+      <!-- List jadwal -->
+      <section class="card listCard">
+        <div class="listHeader">
+          <h3>Jadwal Hari Ini</h3>
+          <span class="badge" id="totalBadge">0 Jadwal</span>
+        </div>
+
+        <div id="scheduleList" class="scheduleList">
+          <!-- list akan muncul di sini -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal alarm -->
+    <div id="alarmModal" class="modal hidden">
+      <div class="modalContent">
+        <h2>⏰ Waktunya Minum Obat!</h2>
+        <p id="alarmText">Minum obat sekarang.</p>
+
+        <div class="modalActions">
+          <button id="takenBtn" class="btn primary big">✅ Sudah Diminum</button>
+          <button id="snoozeBtn" class="btn warning big">😴 Tunda 5 Menit</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>Made for ❤️ kesehatan keluarga | Website Pengingat Obat</p>
+    </footer>
   </div>
+
+  <audio id="alarmSound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+  </audio>
 
   <script src="script.js"></script>
 </body>
