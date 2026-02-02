@@ -1,35 +1,230 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f2f2f2;
+const clockEl = document.getElementById("clock");
+const scheduleListEl = document.getElementById("scheduleList");
+const totalBadge = document.getElementById("totalBadge");
+
+const medicineName = document.getElementById("medicineName");
+const dose = document.getElementById("dose");
+const time = document.getElementById("time");
+const note = document.getElementById("note");
+
+const addBtn = document.getElementById("addBtn");
+const clearBtn = document.getElementById("clearBtn");
+
+const alarmModal = document.getElementById("alarmModal");
+const alarmText = document.getElementById("alarmText");
+const alarmSound = document.getElementById("alarmSound");
+const takenBtn = document.getElementById("takenBtn");
+const snoozeBtn = document.getElementById("snoozeBtn");
+
+let schedules = JSON.parse(localStorage.getItem("schedules")) || [];
+let activeAlarmId = null;
+
+// ========== CLOCK ==========
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  clockEl.textContent = `${hh}:${mm}:${ss}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ========== SAVE / LOAD ==========
+function saveSchedules() {
+  localStorage.setItem("schedules", JSON.stringify(schedules));
 }
 
-.container {
-  width: 300px;
-  margin: 100px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
+// ========== RENDER ==========
+function render() {
+  scheduleListEl.innerHTML = "";
+
+  totalBadge.textContent = `${schedules.length} Jadwal`;
+
+  if (schedules.length === 0) {
+    scheduleListEl.innerHTML = `
+      <div class="item">
+        <div class="left">
+          <div class="title">Belum ada jadwal</div>
+          <div class="meta">Tambahkan jadwal obat agar muncul di sini.</div>
+        </div>
+        <div class="time">--:--</div>
+      </div>
+    `;
+    return;
+  }
+
+  // sort by time
+  const sorted = [...schedules].sort((a, b) => a.time.localeCompare(b.time));
+
+  sorted.forEach((s) => {
+    const item = document.createElement("div");
+    item.className = `item ${s.done ? "done" : ""}`;
+
+    item.innerHTML = `
+      <div class="left">
+        <div class="title">${s.name} <span style="font-size:12px;color:#9ca3af;">(${s.dose})</span></div>
+        <div class="meta">${s.note ? s.note : "Tanpa catatan"} • Status: ${s.done ? "Sudah diminum" : "Belum diminum"}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <div class="time">${s.time}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          <button class="btn smallBtn primary" data-action="done" data-id="${s.id}">✅ Done</button>
+          <button class="btn smallBtn danger" data-action="delete" data-id="${s.id}">🗑 Hapus</button>
+        </div>
+      </div>
+    `;
+
+    scheduleListEl.appendChild(item);
+  });
 }
 
-input, button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 8px;
+render();
+
+// ========== ADD ==========
+addBtn.addEventListener("click", () => {
+  const nameVal = medicineName.value.trim();
+  const doseVal = dose.value.trim();
+  const timeVal = time.value;
+  const noteVal = note.value.trim();
+
+  if (!nameVal || !doseVal || !timeVal) {
+    alert("Mohon isi Nama Obat, Dosis, dan Waktu Minum.");
+    return;
+  }
+
+  const newSchedule = {
+    id: Date.now(),
+    name: nameVal,
+    dose: doseVal,
+    time: timeVal,
+    note: noteVal,
+    done: false,
+    snoozeUntil: null
+  };
+
+  schedules.push(newSchedule);
+  saveSchedules();
+  render();
+
+  medicineName.value = "";
+  dose.value = "";
+  time.value = "";
+  note.value = "";
+});
+
+// ========== CLEAR ALL ==========
+clearBtn.addEventListener("click", () => {
+  const ok = confirm("Yakin ingin menghapus semua jadwal?");
+  if (!ok) return;
+  schedules = [];
+  saveSchedules();
+  render();
+});
+
+// ========== LIST ACTIONS ==========
+scheduleListEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+  const id = Number(btn.dataset.id);
+
+  if (action === "delete") {
+    schedules = schedules.filter((s) => s.id !== id);
+    saveSchedules();
+    render();
+  }
+
+  if (action === "done") {
+    schedules = schedules.map((s) =>
+      s.id === id ? { ...s, done: true, snoozeUntil: null } : s
+    );
+    saveSchedules();
+    render();
+  }
+});
+
+// ========== ALARM CHECK ==========
+function getNowHHMM() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
+function checkAlarm() {
+  const now = new Date();
+  const hhmm = getNowHHMM();
+
+  schedules.forEach((s) => {
+    if (s.done) return;
+
+    // snooze logic
+    if (s.snoozeUntil) {
+      const snoozeDate = new Date(s.snoozeUntil);
+      if (now < snoozeDate) return;
+    }
+
+    if (s.time === hhmm) {
+      triggerAlarm(s.id);
+    }
+  });
 }
 
-button:hover {
-  background: #45a049;
+setInterval(checkAlarm, 1000);
+
+// ========== TRIGGER ==========
+function triggerAlarm(id) {
+  if (activeAlarmId === id) return; // avoid repeat spam
+
+  const schedule = schedules.find((s) => s.id === id);
+  if (!schedule) return;
+
+  activeAlarmId = id;
+  alarmText.textContent = `Minum obat: ${schedule.name} (${schedule.dose}) • Jam ${schedule.time}`;
+
+  alarmModal.classList.remove("hidden");
+
+  // play sound
+  alarmSound.currentTime = 0;
+  alarmSound.play().catch(() => {
+    // jika browser blokir autoplay, user cukup klik tombol
+  });
 }
 
-#status {
-  margin-top: 15px;
-  font-weight: bold;
+// ========== MODAL BUTTONS ==========
+takenBtn.addEventListener("click", () => {
+  if (!activeAlarmId) return;
+
+  schedules = schedules.map((s) =>
+    s.id === activeAlarmId ? { ...s, done: true, snoozeUntil: null } : s
+  );
+  saveSchedules();
+  render();
+
+  stopAlarm();
+});
+
+snoozeBtn.addEventListener("click", () => {
+  if (!activeAlarmId) return;
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 5);
+
+  schedules = schedules.map((s) =>
+    s.id === activeAlarmId ? { ...s, snoozeUntil: now.toISOString() } : s
+  );
+  saveSchedules();
+
+  stopAlarm();
+});
+
+function stopAlarm() {
+  alarmModal.classList.add("hidden");
+  alarmSound.pause();
+  activeAlarmId = null;
 }
+
+// close modal if click outside
+alarmModal.addEventListener("click", (e) => {
+  if (e.target === alarmModal) stopAlarm();
+});
