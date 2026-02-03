@@ -1,56 +1,74 @@
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pengingat Minum Obat</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div class="app">
-    <header class="header">
-      <h1>💊 Pengingat Minum Obat</h1>
-      <p>Atur jadwal minum obat agar tidak terlewat</p>
-    </header>
+  <!-- Toast container -->
+  <div id="toastContainer" class="toast-container"></div>
 
-    <section class="card">
-      <h2>➕ Tambah Jadwal Obat</h2>
-      <form id="medicineForm">
-        <div class="grid">
-          <div class="field">
-            <label>Nama Obat</label>
-            <input type="text" id="namaObat" placeholder="Contoh: Paracetamol" required />
-          </div>
+  <main class="app">
 
-          <div class="field">
-            <label>Dosis</label>
-            <input type="text" id="dosis" placeholder="Contoh: 1 tablet" required />
-          </div>
+    <!-- Header -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-top">
+          <h1>💊 Pengingat Minum<br/>Obat</h1>
 
-          <div class="field">
-            <label>Jam Minum</label>
-            <input type="time" id="jamMinum" required />
+          <div class="clock-box">
+            <div class="clock-label">Jam Sekarang</div>
+            <div id="clockNow" class="clock-time">--:--:--</div>
           </div>
         </div>
 
-        <button type="submit" class="btn">Simpan Jadwal</button>
+        <p>Atur jadwal minum obat agar tidak terlewat</p>
+      </div>
+    </section>
+
+    <!-- Form -->
+    <section class="card">
+      <div class="card-head">
+        <h2><span class="icon">➕</span> Tambah Jadwal Obat</h2>
+      </div>
+
+      <form id="medicineForm" class="form">
+        <div class="field">
+          <label for="namaObat">Nama Obat</label>
+          <input id="namaObat" type="text" placeholder="Contoh: Paracetamol" required />
+        </div>
+
+        <div class="field">
+          <label for="dosis">Dosis</label>
+          <input id="dosis" type="text" placeholder="Contoh: 1 tablet" required />
+        </div>
+
+        <div class="field">
+          <label for="jamMinum">Jam Minum</label>
+          <input id="jamMinum" type="time" required />
+        </div>
+
+        <button class="btn primary" type="submit">Simpan Jadwal</button>
         <p id="errorMsg" class="error"></p>
       </form>
     </section>
 
+    <!-- List -->
     <section class="card">
-      <div class="card-title">
-        <h2>📌 Jadwal Hari Ini</h2>
-        <button id="clearAll" class="btn danger">Hapus Semua</button>
+      <div class="card-row">
+        <h2><span class="icon">📌</span> Jadwal Hari Ini</h2>
+        <button id="clearAll" class="btn danger" type="button">Hapus Semua</button>
       </div>
 
       <div id="listJadwal" class="list"></div>
-      <p class="hint">Tips: Jadwal otomatis tersimpan di perangkat (LocalStorage).</p>
     </section>
-  </div>
 
-  <!-- Audio alarm -->
+  </main>
+
+  <!-- alarm -->
   <audio id="alarmSound">
     <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
   </audio>
