@@ -1,202 +1,150 @@
-  :root{
-  --bg1:#0f172a;
-  --bg2:#1e293b;
-  --card:#111827;
-  --accent:#38bdf8;
-  --accent2:#22c55e;
-  --danger:#ef4444;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
+const form = document.getElementById("medicineForm");
+const namaObat = document.getElementById("namaObat");
+const dosis = document.getElementById("dosis");
+const jamMinum = document.getElementById("jamMinum");
+const listJadwal = document.getElementById("listJadwal");
+const errorMsg = document.getElementById("errorMsg");
+const clearAll = document.getElementById("clearAll");
+const alarmSound = document.getElementById("alarmSound");
+
+let jadwal = JSON.parse(localStorage.getItem("jadwalObat")) || [];
+
+// fungsi ambil jam sekarang format HH:MM
+function getNowTime() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, Arial, sans-serif;}
-
-body{
-  min-height:100vh;
-  background: radial-gradient(circle at top, #1e40af 0%, var(--bg1) 55%, #020617 100%);
-  display:flex;
-  justify-content:center;
-  padding:25px;
-  color:var(--text);
+// cek apakah waktu sudah lewat
+function isLate(time) {
+  return getNowTime() > time;
 }
 
-.app{
-  width:100%;
-  max-width:900px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
+// simpan localstorage
+function saveData() {
+  localStorage.setItem("jadwalObat", JSON.stringify(jadwal));
 }
 
-.header{
-  padding:22px;
-  border-radius:18px;
-  background: linear-gradient(135deg, rgba(56,189,248,.2), rgba(34,197,94,.1));
-  border:1px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(10px);
+// render list
+function render() {
+  listJadwal.innerHTML = "";
+
+  if (jadwal.length === 0) {
+    listJadwal.innerHTML = `<p style="color:#94a3b8;">Belum ada jadwal obat.</p>`;
+    return;
+  }
+
+  jadwal.sort((a, b) => a.jam.localeCompare(b.jam));
+
+  jadwal.forEach((item) => {
+    const late = isLate(item.jam);
+    const done = item.status === "done";
+
+    let badgeClass = "wait";
+    let badgeText = "Menunggu";
+
+    if (done) {
+      badgeClass = "done";
+      badgeText = "Sudah diminum";
+    } else if (late) {
+      badgeClass = "late";
+      badgeText = "Terlambat";
+    }
+
+    const div = document.createElement("div");
+    div.className = "item";
+
+    div.innerHTML = `
+      <div class="info">
+        <strong>${item.nama}</strong>
+        <span>Dosis: ${item.dosis} • Jam: ${item.jam}</span>
+        <span class="badge ${badgeClass}">${badgeText}</span>
+      </div>
+
+      <div class="actions">
+        <button class="small-btn check" ${done || late ? "disabled" : ""}>
+          ✔ Sudah Minum
+        </button>
+        <button class="small-btn del">🗑 Hapus</button>
+      </div>
+    `;
+
+    // tombol sudah minum
+    div.querySelector(".check").addEventListener("click", () => {
+      if (isLate(item.jam)) {
+        alert("❌ Error: Waktu minum sudah lewat, tidak bisa checklist.");
+        return;
+      }
+      item.status = "done";
+      saveData();
+      render();
+    });
+
+    // tombol hapus
+    div.querySelector(".del").addEventListener("click", () => {
+      jadwal = jadwal.filter((x) => x.id !== item.id);
+      saveData();
+      render();
+    });
+
+    listJadwal.appendChild(div);
+  });
 }
 
-.header h1{
-  font-size:28px;
-  margin-bottom:6px;
-}
-.header p{
-  color:var(--muted);
-}
+// tambah jadwal
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  errorMsg.textContent = "";
 
-.card{
-  padding:18px;
-  border-radius:18px;
-  background: rgba(17,24,39,.92);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
-}
+  const now = getNowTime();
+  const jam = jamMinum.value;
 
-.card h2{
-  font-size:18px;
-  margin-bottom:14px;
-}
+  // VALIDASI: jika jam sudah lewat -> error dan tidak bisa simpan
+  if (jam < now) {
+    errorMsg.textContent = "❌ Error: Jam yang dipilih sudah lewat. Tidak bisa menambahkan jadwal.";
+    return;
+  }
 
-.grid{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap:12px;
-  margin-bottom:12px;
-}
+  const newItem = {
+    id: Date.now(),
+    nama: namaObat.value.trim(),
+    dosis: dosis.value.trim(),
+    jam: jam,
+    status: "wait"
+  };
 
-.field label{
-  font-size:13px;
-  color:var(--muted);
-  display:block;
-  margin-bottom:6px;
-}
+  jadwal.push(newItem);
+  saveData();
+  render();
 
-.field input{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.12);
-  outline:none;
-  background: rgba(2,6,23,.65);
-  color:var(--text);
-}
+  form.reset();
+});
 
-.field input:focus{
-  border-color: rgba(56,189,248,.7);
-  box-shadow: 0 0 0 3px rgba(56,189,248,.15);
-}
+// hapus semua
+clearAll.addEventListener("click", () => {
+  if (confirm("Yakin hapus semua jadwal?")) {
+    jadwal = [];
+    saveData();
+    render();
+  }
+});
 
-.btn{
-  padding:12px 14px;
-  border:none;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:600;
-  background: linear-gradient(135deg, var(--accent), #60a5fa);
-  color:#00111a;
-  transition:.2s;
-}
+// notifikasi alarm (cek tiap 10 detik)
+setInterval(() => {
+  const now = getNowTime();
 
-.btn:hover{transform: translateY(-2px);}
-.btn:active{transform: translateY(0);}
+  jadwal.forEach((item) => {
+    if (item.status === "wait" && item.jam === now) {
+      // bunyikan alarm
+      alarmSound.play().catch(() => {});
+      alert(`⏰ Waktunya minum obat: ${item.nama} (${item.dosis})`);
+    }
+  });
 
-.btn.danger{
-  background: linear-gradient(135deg, var(--danger), #fb7185);
-  color:#fff;
-}
+  render();
+}, 10000);
 
-.card-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:12px;
-}
-
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.item{
-  padding:14px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.08);
-  background: rgba(2,6,23,.6);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-
-.item .info{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-
-.item .info strong{
-  font-size:16px;
-}
-.item .info span{
-  color:var(--muted);
-  font-size:13px;
-}
-
-.badge{
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-}
-
-.badge.wait{ background: rgba(56,189,248,.18); color: var(--accent);}
-.badge.done{ background: rgba(34,197,94,.18); color: var(--accent2);}
-.badge.late{ background: rgba(239,68,68,.18); color: #fb7185;}
-
-.actions{
-  display:flex;
-  gap:8px;
-}
-
-.small-btn{
-  padding:10px 12px;
-  border-radius:12px;
-  border:none;
-  cursor:pointer;
-  font-weight:700;
-}
-
-.small-btn.check{
-  background: rgba(34,197,94,.2);
-  color: var(--accent2);
-  border:1px solid rgba(34,197,94,.35);
-}
-
-.small-btn.del{
-  background: rgba(239,68,68,.18);
-  color:#fb7185;
-  border:1px solid rgba(239,68,68,.3);
-}
-
-.small-btn:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-.error{
-  margin-top:8px;
-  color:#fb7185;
-  font-size:13px;
-}
-
-.hint{
-  margin-top:12px;
-  color:var(--muted);
-  font-size:12px;
-}
-
-@media(max-width:720px){
-  .grid{grid-template-columns:1fr;}
-}
+// render awal
+render();
